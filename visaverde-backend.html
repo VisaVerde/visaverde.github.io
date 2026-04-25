@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VisaVerde – Backend System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --green-deep:   #1a3d2b;
+      --green-mid:    #2e6b47;
+      --green-bright: #3d9b5f;
+      --green-light:  #a8d5b5;
+      --green-pale:   #e8f5ec;
+      --cream:        #faf8f3;
+      --white:        #ffffff;
+      --text-dark:    #1a2820;
+      --text-mid:     #3d5247;
+      --text-light:   #6b8c7a;
+      --red:          #e05252;
+      --orange:       #e08a2e;
+      --blue:         #3a7bd5;
+      --gold:         #c9a84c;
+      --shadow:       0 4px 24px rgba(26,61,43,0.10);
+      --shadow-lg:    0 8px 40px rgba(26,61,43,0.14);
+      --radius:       14px;
+      --radius-sm:    8px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text-dark); min-height: 100vh; }
+
+    /* ── VIEWS ── */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ══════════════════════════════
+       APPLY PAGE
+    ══════════════════════════════ */
+    .apply-wrap {
+      max-width: 680px; margin: 0 auto;
+      padding: 3rem 1.5rem 5rem;
+    }
+    .apply-logo {
+      font-family: 'Fraunces', serif;
+      font-size: 1.6rem; font-weight: 700;
+      color: var(--green-deep);
+      margin-bottom: 2.5rem;
+      display: block; text-align: center;
+      text-decoration: none;
+    }
+    .apply-logo span { color: var(--green-bright); }
+
+    .apply-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+    .apply-header {
+      background: var(--green-deep);
+      padding: 2rem 2.5rem;
+      color: #fff;
+    }
+    .apply-header h1 {
+      font-family: 'Fraunces', serif;
+      font-size: 1.6rem; font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+    .apply-header p { color: rgba(255,255,255,0.65); font-size: 0.9rem; }
+
+    /* Progress bar */
+    .progress-bar {
+      display: flex;
+      background: rgba(255,255,255,0.08);
+      margin-top: 1.5rem;
+      border-radius: 50px;
+      overflow: hidden;
+      height: 6px;
+    }
+    .progress-fill {
+      background: var(--green-light);
+      height: 100%;
+      border-radius: 50px;
+      transition: width 0.4s ease;
+    }
+    .progress-label {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.5);
+      margin-top: 0.5rem;
+      text-align: right;
+    }
+
+    .apply-body { padding: 2.5rem; }
+
+    /* Step indicators */
+    .steps-nav {
+      display: flex; gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+    .step-dot {
+      flex: 1; height: 4px; border-radius: 2px;
+      background: var(--green-pale);
+      transition: background 0.3s;
+    }
+    .step-dot.done { background: var(--green-bright); }
+    .step-dot.active { background: var(--green-mid); }
+
+    .step-title {
+      font-family: 'Fraunces', serif;
+      font-size: 1.2rem; font-weight: 600;
+      color: var(--green-deep);
+      margin-bottom: 1.5rem;
+    }
+
+    /* Form fields */
+    .field-group {
+      margin-bottom: 1.2rem;
+    }
+    .field-group label {
+      display: block;
+      font-size: 0.78rem; font-weight: 600;
+      color: var(--text-mid);
+      text-transform: uppercase; letter-spacing: 0.07em;
+      margin-bottom: 6px;
+    }
+    .field-group input,
+    .field-group select,
+    .field-group textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1.5px solid var(--green-pale);
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.92rem;
+      color: var(--text-dark);
+      background: var(--white);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    .field-group input:focus,
+    .field-group select:focus,
+    .field-group textarea:focus {
+      border-color: var(--green-bright);
+      box-shadow: 0 0 0 3px rgba(61,155,95,0.12);
+    }
+    .field-group textarea { resize: vertical; min-height: 80px; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media(max-width:520px){ .field-row { grid-template-columns: 1fr; } }
+
+    /* Upload area */
+    .upload-area {
+      border: 2px dashed var(--green-light);
+      border-radius: var(--radius-sm);
+      padding: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: var(--green-pale);
+    }
+    .upload-area:hover { border-color: var(--green-bright); background: #dceee3; }
+    .upload-area input { display: none; }
+    .upload-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .upload-area p { font-size: 0.85rem; color: var(--text-light); }
+    .upload-area strong { color: var(--green-mid); }
+    .file-list { margin-top: 0.8rem; text-align: left; }
+    .file-item {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--white); border: 1px solid var(--green-pale);
+      border-radius: 6px; padding: 0.4rem 0.7rem;
+      font-size: 0.82rem; color: var(--text-mid);
+      margin-top: 6px;
+    }
+    .file-item span { margin-left: auto; color: var(--red); cursor: pointer; font-size: 1rem; }
+
+    /* Country-specific fields */
+    .country-fields { display: none; }
+    .country-fields.visible { display: block; }
+    .country-banner {
+      background: var(--green-pale);
+      border-left: 3px solid var(--green-bright);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 0.8rem 1rem;
+      font-size: 0.85rem;
+      color: var(--text-mid);
+      margin-bottom: 1.5rem;
+    }
+
+    /* Payment section */
+    .payment-box {
+      background: var(--green-pale);
+      border-radius: var(--radius-sm);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .payment-box h3 {
+      font-size: 0.9rem; font-weight: 600;
+      color: var(--green-deep); margin-bottom: 1rem;
+    }
+    .payment-summary-row {
+      display: flex; justify-content: space-between;
+      font-size: 0.88rem; color: var(--text-mid);
+      padding: 0.3rem 0;
+    }
+    .payment-summary-row.total {
+      border-top: 1px solid var(--green-light);
+      margin-top: 0.5rem; padding-top: 0.7rem;
+      font-weight: 700; color: var(--green-deep);
+      font-size: 1rem;
+    }
+
+    .payment-methods {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 0.8rem; margin-bottom: 1.2rem;
+    }
+    .pay-method {
+      border: 2px solid var(--green-pale);
+      border-radius: var(--radius-sm);
+      padding: 0.8rem 1rem;
+      display: flex; align-items: center; gap: 8px;
+      cursor: pointer; background: var(--white);
+      font-size: 0.88rem; font-weight: 500;
+      transition: border-color 0.2s;
+    }
+    .pay-method.selected { border-color: var(--green-bright); background: var(--green-pale); }
+    .pay-method-icon { font-size: 1.3rem; }
+
+    .stripe-placeholder {
+      background: var(--white);
+      border: 1.5px solid var(--green-pale);
+      border-radius: var(--radius-sm);
+      padding: 1rem 1.2rem;
+      font-size: 0.85rem; color: var(--text-light);
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .stripe-placeholder strong { color: var(--green-mid); display: block; margin-bottom: 4px; }
+
+    /* Nav buttons */
+    .form-nav {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 2rem; padding-top: 1.5rem;
+      border-top: 1px solid var(--green-pale);
+    }
+    .btn-back {
+      background: none; border: 1.5px solid var(--green-light);
+      color: var(--text-mid); padding: 0.7rem 1.5rem;
+      border-radius: 50px; font-size: 0.9rem; font-weight: 500;
+      cursor: pointer; transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-back:hover { border-color: var(--green-bright); color: var(--green-deep); }
+    .btn-next {
+      background: var(--green-deep); color: #fff;
+      border: none; padding: 0.7rem 2rem;
+      border-radius: 50px; font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; transition: background 0.2s, transform 0.2s;
+    }
+    .btn-next:hover { background: var(--green-bright); transform: translateY(-1px); }
+
+    /* Success screen */
+    .success-screen {
+      text-align: center; padding: 3rem 2rem;
+    }
+    .success-icon { font-size: 4rem; margin-bottom: 1.5rem; }
+    .success-screen h2 {
+      font-family: 'Fraunces', serif;
+      font-size: 1.8rem; color: var(--green-deep);
+      margin-bottom: 0.8rem;
+    }
+    .success-screen p { color: var(--text-light); font-size: 0.95rem; line-height: 1.7; margin-bottom: 1rem; }
+    .app-id-box {
+      background: var(--green-pale);
+      border-radius: var(--radius-sm);
+      padding: 1rem 1.5rem;
+      display: inline-block;
+      margin: 1rem 0;
+    }
+    .app-id-box .label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-light); margin-bottom: 4px; }
+    .app-id-box .id { font-family: 'Fraunces', serif; font-size: 1.6rem; font-weight: 700; color: var(--green-deep); letter-spacing: 2px; }
+
+    /* ══════════════════════════════
+       TRACKING PAGE
+    ══════════════════════════════ */
+    .track-wrap {
+      max-width: 600px; margin: 0 auto;
+      padding: 3rem 1.5rem;
+    }
+    .track-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+    .track-header {
+      background: var(--green-deep);
+      padding: 2rem 2.5rem;
+      color: #fff;
+    }
+    .track-header h1 {
+      font-family: 'Fraunces', serif;
+      font-size: 1.5rem; font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+    .track-header p { color: rgba(255,255,255,0.6); font-size: 0.88rem; }
+    .track-body { padding: 2rem 2.5rem; }
+    .track-input-row {
+      display: flex; gap: 0.8rem; margin-bottom: 1.5rem;
+    }
+    .track-input-row input {
+      flex: 1; padding: 0.75rem 1rem;
+      border: 1.5px solid var(--green-pale);
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.92rem; outline: none;
+      transition: border-color 0.2s;
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    .track-input-row input:focus { border-color: var(--green-bright); }
+    .track-input-row button {
+      background: var(--green-deep); color: #fff;
+      border: none; padding: 0.75rem 1.5rem;
+      border-radius: var(--radius-sm);
+      font-weight: 600; font-size: 0.9rem;
+      cursor: pointer; transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .track-input-row button:hover { background: var(--green-bright); }
+
+    .track-result { display: none; }
+    .track-result.visible { display: block; }
+
+    .app-summary {
+      background: var(--green-pale);
+      border-radius: var(--radius-sm);
+      padding: 1.2rem 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .app-summary-row {
+      display: flex; justify-content: space-between;
+      font-size: 0.88rem; padding: 0.25rem 0;
+    }
+    .app-summary-row .key { color: var(--text-light); }
+    .app-summary-row .val { font-weight: 600; color: var(--text-dark); }
+
+    /* Status timeline */
+    .timeline { position: relative; padding-left: 1.8rem; }
+    .timeline::before {
+      content: '';
+      position: absolute; left: 8px; top: 0; bottom: 0;
+      width: 2px; background: var(--green-pale);
+    }
+    .tl-item {
+      position: relative; margin-bottom: 1.2rem;
+    }
+    .tl-dot {
+      position: absolute; left: -1.8rem; top: 3px;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--green-pale);
+      border: 2px solid var(--green-light);
+      z-index: 1;
+    }
+    .tl-dot.done { background: var(--green-bright); border-color: var(--green-bright); }
+    .tl-dot.current { background: var(--white); border-color: var(--green-bright); box-shadow: 0 0 0 3px rgba(61,155,95,0.2); }
+    .tl-label { font-size: 0.88rem; font-weight: 600; color: var(--text-dark); }
+    .tl-label.faded { color: var(--text-light); font-weight: 400; }
+    .tl-date { font-size: 0.75rem; color: var(--text-light); margin-top: 2px; }
+    .tl-note { font-size: 0.82rem; color: var(--text-mid); margin-top: 4px; background: var(--white); border-radius: 6px; padding: 0.5rem 0.7rem; border-left: 2px solid var(--green-light); }
+
+    .track-error {
+      text-align: center; padding: 1.5rem;
+      color: var(--red); font-size: 0.9rem; display: none;
+    }
+    .track-error.visible { display: block; }
+
+    /* ══════════════════════════════
+       ADMIN DASHBOARD
+    ══════════════════════════════ */
+    .admin-layout {
+      display: flex; min-height: 100vh;
+    }
+    .sidebar {
+      width: 240px; flex-shrink: 0;
+      background: var(--green-deep);
+      padding: 2rem 0;
+      display: flex; flex-direction: column;
+    }
+    .sidebar-logo {
+      font-family: 'Fraunces', serif;
+      font-size: 1.3rem; font-weight: 700;
+      color: #fff; padding: 0 1.5rem 2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar-logo span { color: var(--green-light); }
+    .sidebar-menu {
+      list-style: none; padding: 1rem 0; flex: 1;
+    }
+    .sidebar-menu li a {
+      display: flex; align-items: center; gap: 10px;
+      padding: 0.75rem 1.5rem;
+      color: rgba(255,255,255,0.6);
+      text-decoration: none; font-size: 0.88rem; font-weight: 500;
+      transition: color 0.2s, background 0.2s;
+      cursor: pointer;
+    }
+    .sidebar-menu li a:hover,
+    .sidebar-menu li a.active {
+      color: #fff;
+      background: rgba(255,255,255,0.08);
+    }
+    .sidebar-menu li a .icon { font-size: 1rem; width: 20px; text-align: center; }
+    .sidebar-bottom {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      font-size: 0.78rem; color: rgba(255,255,255,0.35);
+    }
+
+    .admin-main {
+      flex: 1; overflow-x: hidden;
+      background: var(--cream);
+    }
+    .admin-topbar {
+      background: var(--white);
+      padding: 1rem 2rem;
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid var(--green-pale);
+      box-shadow: 0 1px 8px rgba(26,61,43,0.05);
+    }
+    .admin-topbar h2 {
+      font-family: 'Fraunces', serif;
+      font-size: 1.2rem; font-weight: 600;
+      color: var(--green-deep);
+    }
+    .admin-topbar-right { display: flex; gap: 0.8rem; align-items: center; }
+
+    .btn-export {
+      background: var(--white);
+      border: 1.5px solid var(--green-light);
+      color: var(--text-mid);
+      padding: 0.5rem 1.1rem;
+      border-radius: 50px; font-size: 0.82rem; font-weight: 600;
+      cursor: pointer; transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-export:hover { border-color: var(--green-bright); color: var(--green-deep); }
+
+    .admin-content { padding: 2rem; }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem; margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 1.3rem 1.5rem;
+      box-shadow: var(--shadow);
+    }
+    .stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-light); margin-bottom: 0.4rem; }
+    .stat-num { font-family: 'Fraunces', serif; font-size: 2rem; font-weight: 700; color: var(--green-deep); }
+    .stat-sub { font-size: 0.75rem; color: var(--text-light); margin-top: 2px; }
+
+    /* Filters */
+    .filter-bar {
+      display: flex; gap: 0.7rem; flex-wrap: wrap;
+      margin-bottom: 1.5rem; align-items: center;
+    }
+    .filter-bar input {
+      flex: 1; min-width: 200px;
+      padding: 0.6rem 1rem;
+      border: 1.5px solid var(--green-pale);
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem; outline: none;
+    }
+    .filter-bar input:focus { border-color: var(--green-bright); }
+    .filter-bar select {
+      padding: 0.6rem 1rem;
+      border: 1.5px solid var(--green-pale);
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem; outline: none;
+      background: var(--white);
+    }
+
+    /* Applications table */
+    .table-wrap {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      background: var(--green-pale);
+      padding: 0.8rem 1.2rem;
+      text-align: left;
+      font-size: 0.75rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      color: var(--text-mid);
+      white-space: nowrap;
+    }
+    tbody tr {
+      border-bottom: 1px solid var(--green-pale);
+      transition: background 0.15s;
+      cursor: pointer;
+    }
+    tbody tr:hover { background: var(--green-pale); }
+    tbody tr:last-child { border-bottom: none; }
+    td {
+      padding: 0.9rem 1.2rem;
+      font-size: 0.88rem; color: var(--text-dark);
+      vertical-align: middle;
+    }
+    .td-name { font-weight: 600; }
+    .td-id { font-family: monospace; font-size: 0.8rem; color: var(--text-light); }
+    .td-flag { font-size: 1.1rem; }
+
+    /* Status badges */
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 50px;
+      font-size: 0.72rem; font-weight: 600;
+      white-space: nowrap;
+    }
+    .badge-incomplete  { background: #fef3cd; color: #856404; }
+    .badge-submitted   { background: #cfe2ff; color: #084298; }
+    .badge-review      { background: #e8d5f5; color: #6f2da8; }
+    .badge-additional  { background: #ffe5d0; color: #c45c00; }
+    .badge-processing  { background: #d1ecf1; color: #0c5460; }
+    .badge-approved    { background: #d4edda; color: #155724; }
+    .badge-delivered   { background: var(--green-pale); color: var(--green-deep); }
+
+    /* Application detail modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(10,25,15,0.5);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--white);
+      border-radius: var(--radius);
+      width: 90%; max-width: 640px;
+      max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.25);
+    }
+    .modal-header {
+      background: var(--green-deep); color: #fff;
+      padding: 1.5rem 2rem;
+      display: flex; justify-content: space-between; align-items: center;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+    .modal-header h3 { font-family: 'Fraunces', serif; font-size: 1.1rem; }
+    .modal-close {
+      background: none; border: none; color: rgba(255,255,255,0.6);
+      font-size: 1.5rem; cursor: pointer; line-height: 1;
+      transition: color 0.2s;
+    }
+    .modal-close:hover { color: #fff; }
+    .modal-body { padding: 2rem; }
+
+    .modal-section-title {
+      font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--text-light); font-weight: 600;
+      margin: 1.2rem 0 0.7rem;
+    }
+    .modal-section-title:first-child { margin-top: 0; }
+
+    .detail-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;
+    }
+    .detail-item {
+      background: var(--cream); border-radius: var(--radius-sm);
+      padding: 0.6rem 0.9rem;
+    }
+    .detail-item .key { font-size: 0.72rem; color: var(--text-light); margin-bottom: 2px; }
+    .detail-item .val { font-size: 0.88rem; font-weight: 600; color: var(--text-dark); }
+
+    .docs-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .doc-chip {
+      background: var(--green-pale);
+      color: var(--green-mid);
+      border-radius: 50px;
+      padding: 4px 12px;
+      font-size: 0.78rem; font-weight: 500;
+      display: flex; align-items: center; gap: 5px;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .doc-chip:hover { background: var(--green-light); }
+
+    .status-update-row {
+      display: flex; gap: 0.8rem; align-items: center;
+      margin-top: 0.8rem;
+    }
+    .status-update-row select {
+      flex: 1; padding: 0.65rem 1rem;
+      border: 1.5px solid var(--green-pale);
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem; outline: none;
+    }
+    .status-update-row select:focus { border-color: var(--green-bright); }
+
+    .note-area {
+      width: 100%; margin-top: 0.8rem;
+      padding: 0.65rem 1rem;
+      border: 1.5px solid var(--green-pale);
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem; resize: vertical; min-height: 70px;
+      outline: none;
+    }
+    .note-area:focus { border-color: var(--green-bright); }
+
+    .btn-update {
+      width: 100%; margin-top: 0.8rem;
+      background: var(--green-deep); color: #fff;
+      border: none; padding: 0.8rem;
+      border-radius: 50px; font-size: 0.92rem; font-weight: 600;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .btn-update:hover { background: var(--green-bright); }
+
+    /* Login screen */
+    .login-wrap {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--green-deep);
+      padding: 2rem;
+    }
+    .login-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 3rem 2.5rem;
+      width: 100%; max-width: 380px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+    .login-logo {
+      font-family: 'Fraunces', serif;
+      font-size: 2rem; font-weight: 700;
+      color: var(--green-deep); margin-bottom: 0.3rem;
+    }
+    .login-logo span { color: var(--green-bright); }
+    .login-sub { font-size: 0.85rem; color: var(--text-light); margin-bottom: 2rem; }
+    .login-card .field-group { text-align: left; }
+    .btn-login {
+      width: 100%; background: var(--green-deep); color: #fff;
+      border: none; padding: 0.85rem;
+      border-radius: 50px; font-size: 0.95rem; font-weight: 600;
+      cursor: pointer; margin-top: 0.5rem;
+      transition: background 0.2s;
+    }
+    .btn-login:hover { background: var(--green-bright); }
+    .login-hint { font-size: 0.75rem; color: var(--text-light); margin-top: 1rem; }
+
+    /* Nav links for demo */
+    .demo-nav {
+      position: fixed; bottom: 1.5rem; right: 1.5rem;
+      background: var(--green-deep); color: #fff;
+      border-radius: var(--radius);
+      padding: 1rem 1.3rem;
+      box-shadow: var(--shadow-lg);
+      z-index: 300;
+      font-size: 0.8rem;
+    }
+    .demo-nav p { font-size: 0.7rem; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.07em; }
+    .demo-nav a {
+      display: block; color: var(--green-light);
+      text-decoration: none; padding: 2px 0;
+      cursor: pointer;
+    }
+    .demo-nav a:hover { color: #fff; }
+
+    @media(max-width: 768px) {
+      .sidebar { display: none; }
+      .admin-content { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ DEMO NAV ══ -->
+<div class="demo-nav">
+  <p>Demo Pages</p>
+  <a onclick="showView('apply')">📋 Apply Form</a>
+  <a onclick="showView('track')">🔍 Track Application</a>
+  <a onclick="showView('login')">🔐 Admin Login</a>
+  <a onclick="showView('admin')">⚙️ Admin Dashboard</a>
+</div>
+
+<!-- ══════════════════════════════════════
+     VIEW 1: APPLICATION FORM
+══════════════════════════════════════ -->
+<div id="view-apply" class="view active">
+  <div class="apply-wrap">
+    <a class="apply-logo">Visa<span>Verde</span></a>
+
+    <div class="apply-card">
+      <div class="apply-header">
+        <h1>Start Your Application</h1>
+        <p>Complete all steps to submit your e-visa request</p>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill" style="width:25%"></div>
+        </div>
+        <div class="progress-label" id="progressLabel">Step 1 of 4</div>
+      </div>
+
+      <div class="apply-body">
+        <div class="steps-nav">
+          <div class="step-dot active" id="sdot0"></div>
+          <div class="step-dot" id="sdot1"></div>
+          <div class="step-dot" id="sdot2"></div>
+          <div class="step-dot" id="sdot3"></div>
+        </div>
+
+        <!-- STEP 1: Destination & Trip Info -->
+        <div class="form-step" id="step0">
+          <div class="step-title">Destination & Trip Details</div>
+          <div class="field-group">
+            <label>Destination Country *</label>
+            <select id="destCountry" onchange="updateCountryFields()">
+              <option value="">Select destination</option>
+              <option value="turkey">🇹🇷 Turkey</option>
+              <option value="india">🇮🇳 India</option>
+              <option value="kenya">🇰🇪 Kenya</option>
+              <option value="us">🇺🇸 United States (B1/B2)</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label>Purpose of Travel *</label>
+            <select id="travelPurpose">
+              <option value="">Select purpose</option>
+              <option>Tourism / Holiday</option>
+              <option>Business</option>
+              <option>Medical</option>
+              <option>Transit</option>
+              <option>Visiting Family or Friends</option>
+            </select>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label>Intended Arrival Date *</label>
+              <input type="date" id="arrivalDate"/>
+            </div>
+            <div class="field-group">
+              <label>Intended Departure Date *</label>
+              <input type="date" id="departDate"/>
+            </div>
+          </div>
+
+          <!-- Country-specific fields -->
+          <div class="country-fields" id="cf-turkey">
+            <div class="country-banner">🇹🇷 Turkey e-Visa: Single or multiple entry available. Valid for 180 days from issue date.</div>
+            <div class="field-group">
+              <label>Entry Type *</label>
+              <select>
+                <option>Single Entry</option>
+                <option>Multiple Entry</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="country-fields" id="cf-india">
+            <div class="country-banner">🇮🇳 India eVisa: Choose your visa duration carefully. 30-day visas cannot be extended.</div>
+            <div class="field-group">
+              <label>Visa Duration *</label>
+              <select>
+                <option>30 Days (Single/Double Entry)</option>
+                <option>1 Year (Multiple Entry)</option>
+                <option>5 Years (Multiple Entry)</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label>Port of Entry *</label>
+              <input type="text" placeholder="e.g. Indira Gandhi International Airport, Delhi"/>
+            </div>
+          </div>
+
+          <div class="country-fields" id="cf-kenya">
+            <div class="country-banner">🇰🇪 Kenya ETA: All visitors require an Electronic Travel Authorization prior to arrival.</div>
+            <div class="field-group">
+              <label>Accommodation in Kenya *</label>
+              <input type="text" placeholder="Hotel name and city"/>
+            </div>
+          </div>
+
+          <div class="country-fields" id="cf-us">
+            <div class="country-banner">🇺🇸 US B1/B2 Visa: This is a full visa application. Processing involves embassy appointment scheduling. Timeline is typically 4–12 weeks.</div>
+            <div class="field-group">
+              <label>Have you previously traveled to the US?</label>
+              <select>
+                <option>No</option>
+                <option>Yes</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label>Have you ever been refused a US visa?</label>
+              <select>
+                <option>No</option>
+                <option>Yes – please explain in message</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: Personal Information -->
+        <div class="form-step" id="step1" style="display:none">
+          <div class="step-title">Personal Information</div>
+          <div class="field-row">
+            <div class="field-group">
+              <label>First Name *</label>
+              <input type="text" placeholder="Maria"/>
+            </div>
+            <div class="field-group">
+              <label>Last Name *</label>
+              <input type="text" placeholder="Santos"/>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label>Date of Birth *</label>
+              <input type="date"/>
+            </div>
+            <div class="field-group">
+              <label>Nationality *</label>
+              <input type="text" placeholder="e.g. Filipino"/>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label>Passport Number *</label>
+              <input type="text" placeholder="Axxxxxxx"/>
+            </div>
+            <div class="field-group">
+              <label>Passport Expiry Date *</label>
+              <input type="date"/>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label>Email Address *</label>
+              <input type="email" placeholder="maria@email.com"/>
+            </div>
+            <div class="field-group">
+              <label>WhatsApp / Phone *</label>
+              <input type="tel" placeholder="+63 912 345 6789"/>
+            </div>
+          </div>
+          <div class="field-group">
+            <label>Country of Residence *</label>
+            <input type="text" placeholder="Philippines"/>
+          </div>
+          <div class="field-group">
+            <label>Additional Notes (optional)</label>
+            <textarea placeholder="Anything we should know about your application..."></textarea>
+          </div>
+        </div>
+
+        <!-- STEP 3: Document Upload -->
+        <div class="form-step" id="step2" style="display:none">
+          <div class="step-title">Upload Documents</div>
+          <p style="font-size:0.88rem; color:var(--text-light); margin-bottom:1.5rem; line-height:1.6;">
+            Please upload clear, high-quality scans or photos. Accepted formats: JPG, PNG, PDF. Max 10MB per file.
+          </p>
+
+          <div class="field-group">
+            <label>Passport Bio Page (photo page) *</label>
+            <div class="upload-area" onclick="document.getElementById('upPassport').click()">
+              <input type="file" id="upPassport" accept=".jpg,.jpeg,.png,.pdf" onchange="handleFile(this,'fileListPassport')"/>
+              <div class="upload-icon">🪪</div>
+              <p><strong>Click to upload</strong> or drag and drop</p>
+              <p>JPG, PNG or PDF</p>
+            </div>
+            <div class="file-list" id="fileListPassport"></div>
+          </div>
+
+          <div class="field-group">
+            <label>Passport Photo (white background, recent) *</label>
+            <div class="upload-area" onclick="document.getElementById('upPhoto').click()">
+              <input type="file" id="upPhoto" accept=".jpg,.jpeg,.png" onchange="handleFile(this,'fileListPhoto')"/>
+              <div class="upload-icon">🤳</div>
+              <p><strong>Click to upload</strong> – must meet ICAO standards</p>
+              <p>JPG or PNG, max 10MB</p>
+            </div>
+            <div class="file-list" id="fileListPhoto"></div>
+          </div>
+
+          <div class="field-group">
+            <label>Supporting Documents (flight booking, hotel, etc.) – Optional</label>
+            <div class="upload-area" onclick="document.getElementById('upSupport').click()">
+              <input type="file" id="upSupport" accept=".jpg,.jpeg,.png,.pdf" multiple onchange="handleFile(this,'fileListSupport')"/>
+              <div class="upload-icon">📎</div>
+              <p><strong>Click to upload</strong> – multiple files accepted</p>
+            </div>
+            <div class="file-list" id="fileListSupport"></div>
+          </div>
+
+          <div style="background:var(--green-pale); border-radius:var(--radius-sm); padding:1rem; font-size:0.82rem; color:var(--text-mid); line-height:1.6; margin-top:0.5rem;">
+            🔒 Your documents are encrypted and stored securely via Cloudinary. They are never shared with third parties and are deleted after your visa is delivered.
+          </div>
+        </div>
+
+        <!-- STEP 4: Review & Payment -->
+        <div class="form-step" id="step3" style="display:none">
+          <div class="step-title">Review & Payment</div>
+
+          <div class="payment-box">
+            <h3>Order Summary</h3>
+            <div class="payment-summary-row"><span>E-Visa Service Fee</span><span id="summaryFee">$20.00</span></div>
+            <div class="payment-summary-row"><span>Government Visa Fee</span><span>Paid separately to official portal</span></div>
+            <div class="payment-summary-row total"><span>Total Due Now</span><span id="summaryTotal">$20.00</span></div>
+          </div>
+
+          <div class="payment-methods">
+            <div class="pay-method selected" onclick="selectPayment(this)">
+              <span class="pay-method-icon">💳</span> Credit / Debit Card
+            </div>
+            <div class="pay-method" onclick="selectPayment(this)">
+              <span class="pay-method-icon">🅿️</span> PayPal
+            </div>
+          </div>
+
+          <div class="stripe-placeholder">
+            <strong>🔒 Secure Payment via Stripe</strong>
+            Card details will be entered securely here once payment processing is activated.
+            <br/><br/>
+            <em style="font-size:0.78rem;">This is a placeholder — no payment will be charged during the preview phase.</em>
+          </div>
+
+          <div class="field-group">
+            <label><input type="checkbox" style="width:auto; margin-right:6px;"/> I agree to VisaVerde's <a href="#" style="color:var(--green-bright)">Terms of Service</a> and <a href="#" style="color:var(--green-bright)">Privacy Policy</a></label>
+          </div>
+        </div>
+
+        <!-- Success Screen -->
+        <div id="successScreen" style="display:none">
+          <div class="success-screen">
+            <div class="success-icon">🎉</div>
+            <h2>Application Submitted!</h2>
+            <p>Thank you for choosing VisaVerde. We've received your application and will begin reviewing it shortly.</p>
+            <div class="app-id-box">
+              <div class="label">Your Application ID</div>
+              <div class="id" id="generatedId">VV-000000</div>
+            </div>
+            <p>A confirmation email has been sent to you. Use your Application ID to track your status at any time.</p>
+            <br/>
+            <button class="btn-next" onclick="showView('track')">Track My Application</button>
+          </div>
+        </div>
+
+        <!-- Form navigation -->
+        <div class="form-nav" id="formNav">
+          <button class="btn-back" id="btnBack" onclick="changeStep(-1)" style="visibility:hidden">← Back</button>
+          <button class="btn-next" id="btnNext" onclick="changeStep(1)">Continue →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     VIEW 2: TRACKING PAGE
+══════════════════════════════════════ -->
+<div id="view-track" class="view">
+  <div class="track-wrap">
+    <a class="apply-logo" style="font-family:'Fraunces',serif;font-size:1.6rem;font-weight:700;color:var(--green-deep);margin-bottom:2.5rem;display:block;text-align:center;text-decoration:none;">
+      Visa<span style="color:var(--green-bright)">Verde</span>
+    </a>
+
+    <div class="track-card">
+      <div class="track-header">
+        <h1>Track Your Application</h1>
+        <p>Enter your Application ID to see your current status</p>
+      </div>
+      <div class="track-body">
+        <div class="track-input-row">
+          <input type="text" id="trackInput" placeholder="e.g. VV-482910" maxlength="12"/>
+          <button onclick="trackApplication()">Track →</button>
+        </div>
+
+        <div class="track-error" id="trackError">
+          No application found with that ID. Please check and try again.
+        </div>
+
+        <div class="track-result" id="trackResult">
+          <div class="app-summary" id="trackSummary"></div>
+          <div class="timeline" id="trackTimeline"></div>
+        </div>
+      </div>
+    </div>
+
+    <p style="text-align:center;margin-top:1.5rem;font-size:0.82rem;color:var(--text-light)">
+      Need help? <a href="#" style="color:var(--green-bright);text-decoration:none;">Contact us on WhatsApp</a>
+    </p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     VIEW 3: ADMIN LOGIN
+══════════════════════════════════════ -->
+<div id="view-login" class="view">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">Visa<span>Verde</span></div>
+      <div class="login-sub">Admin Portal</div>
+      <div class="field-group">
+        <label>Email</label>
+        <input type="email" value="admin@visaverde.com"/>
+      </div>
+      <div class="field-group">
+        <label>Password</label>
+        <input type="password" value="••••••••"/>
+      </div>
+      <button class="btn-login" onclick="showView('admin')">Sign In →</button>
+      <div class="login-hint">Demo: click Sign In to enter the dashboard</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     VIEW 4: ADMIN DASHBOARD
+══════════════════════════════════════ -->
+<div id="view-admin" class="view">
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <div class="sidebar-logo">Visa<span>Verde</span></div>
+      <ul class="sidebar-menu">
+        <li><a class="active"><span class="icon">📋</span> Applications</a></li>
+        <li><a><span class="icon">📊</span> Analytics</a></li>
+        <li><a><span class="icon">✉️</span> Messages</a></li>
+        <li><a><span class="icon">⚙️</span> Settings</a></li>
+        <li><a onclick="showView('login')"><span class="icon">🚪</span> Sign Out</a></li>
+      </ul>
+      <div class="sidebar-bottom">admin@visaverde.com</div>
+    </aside>
+
+    <div class="admin-main">
+      <div class="admin-topbar">
+        <h2>Applications</h2>
+        <div class="admin-topbar-right">
+          <button class="btn-export" onclick="exportCSV()">⬇ Export CSV</button>
+          <button class="btn-export" onclick="exportCSV()">📊 Export Sheets</button>
+        </div>
+      </div>
+
+      <div class="admin-content">
+        <!-- Stats -->
+        <div class="stats-grid" id="statsGrid"></div>
+
+        <!-- Filters -->
+        <div class="filter-bar">
+          <input type="text" placeholder="Search by name, ID, or email…" oninput="filterApps(this.value)" id="searchInput"/>
+          <select onchange="filterByStatus(this.value)">
+            <option value="">All Statuses</option>
+            <option value="Incomplete">Incomplete</option>
+            <option value="Submitted">Submitted</option>
+            <option value="Under Review">Under Review</option>
+            <option value="Additional Info Requested">Additional Info Requested</option>
+            <option value="Processing">Processing</option>
+            <option value="Approved">Approved</option>
+            <option value="Delivered">Delivered</option>
+          </select>
+          <select onchange="filterByCountry(this.value)">
+            <option value="">All Countries</option>
+            <option>Turkey</option>
+            <option>India</option>
+            <option>Kenya</option>
+            <option>United States</option>
+          </select>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>App ID</th>
+                <th>Applicant</th>
+                <th>Destination</th>
+                <th>Purpose</th>
+                <th>Submitted</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="appsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APPLICATION DETAIL MODAL ══ -->
+<div class="modal-overlay" id="appModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Application Detail</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────
+// DATA STORE (simulates a real database)
+// ─────────────────────────────────────
+const STATUSES = [
+  'Incomplete','Submitted','Under Review',
+  'Additional Info Requested','Processing','Approved','Delivered'
+];
+
+const BADGE_CLASS = {
+  'Incomplete':                'badge-incomplete',
+  'Submitted':                 'badge-submitted',
+  'Under Review':              'badge-review',
+  'Additional Info Requested': 'badge-additional',
+  'Processing':                'badge-processing',
+  'Approved':                  'badge-approved',
+  'Delivered':                 'badge-delivered',
+};
+
+const FLAG = { Turkey:'🇹🇷', India:'🇮🇳', Kenya:'🇰🇪', 'United States':'🇺🇸' };
+const FEES = { turkey:20, india:20, kenya:20, us:35 };
+
+// Seed data
+let applications = [
+  { id:'VV-482910', name:'Maria Santos',    email:'maria.santos@email.com',    phone:'+63 912 111 2222', country:'Turkey',        purpose:'Tourism',  arrival:'2026-05-10', submitted:'2026-04-20', status:'Under Review',   nationality:'Filipino', passport:'A1234567', passportExp:'2029-03-15', docs:['Passport Bio Page','Passport Photo'], notes:'' },
+  { id:'VV-391047', name:'James Dela Cruz', email:'jdelacruz@gmail.com',       phone:'+63 917 333 4444', country:'India',         purpose:'Business', arrival:'2026-05-18', submitted:'2026-04-19', status:'Submitted',      nationality:'Filipino', passport:'A9876543', passportExp:'2028-11-30', docs:['Passport Bio Page','Passport Photo','Flight Booking'], notes:'Attending conference in Mumbai' },
+  { id:'VV-274853', name:'Ana Reyes',       email:'ana.reyes@yahoo.com',       phone:'+63 918 555 6666', country:'Kenya',         purpose:'Tourism',  arrival:'2026-06-01', submitted:'2026-04-18', status:'Approved',       nationality:'Filipino', passport:'P3456789', passportExp:'2030-07-22', docs:['Passport Bio Page','Passport Photo','Hotel Booking'], notes:'' },
+  { id:'VV-193827', name:'Robert Lim',      email:'robert.lim@company.com',    phone:'+63 920 777 8888', country:'United States', purpose:'Business', arrival:'2026-07-15', submitted:'2026-04-15', status:'Processing',     nationality:'Filipino', passport:'P7654321', passportExp:'2027-09-01', docs:['Passport Bio Page','Passport Photo','Bank Statement','Employment Certificate'], notes:'Second US visa application' },
+  { id:'VV-087463', name:'Luz Fernandez',   email:'luz.fernandez@email.com',   phone:'+63 916 999 0000', country:'Turkey',        purpose:'Tourism',  arrival:'2026-05-25', submitted:'2026-04-21', status:'Additional Info Requested', nationality:'Filipino', passport:'A2345678', passportExp:'2028-06-14', docs:['Passport Bio Page'], notes:'Missing passport photo' },
+  { id:'VV-056291', name:'Carlos Mendoza',  email:'c.mendoza@outlook.com',     phone:'+63 915 123 4567', country:'India',         purpose:'Tourism',  arrival:'2026-06-10', submitted:'2026-04-22', status:'Incomplete',     nationality:'Filipino', passport:'',         passportExp:'',           docs:[], notes:'' },
+  { id:'VV-312984', name:'Grace Villanueva',email:'grace.v@gmail.com',         phone:'+63 919 876 5432', country:'Kenya',         purpose:'Tourism',  arrival:'2026-05-30', submitted:'2026-04-23', status:'Delivered',      nationality:'Filipino', passport:'A8765432', passportExp:'2031-01-10', docs:['Passport Bio Page','Passport Photo'], notes:'' },
+];
+
+let filteredApps = [...applications];
+let currentFilter = { search:'', status:'', country:'' };
+
+// ─────────────────────────────────────
+// VIEW SWITCHING
+// ─────────────────────────────────────
+function showView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + v).classList.add('active');
+  if (v === 'admin') renderAdmin();
+}
+
+// ─────────────────────────────────────
+// APPLY FORM
+// ─────────────────────────────────────
+let currentStep = 0;
+const totalSteps = 4;
+
+function updateCountryFields() {
+  document.querySelectorAll('.country-fields').forEach(el => el.classList.remove('visible'));
+  const val = document.getElementById('destCountry').value;
+  if (val) {
+    const cf = document.getElementById('cf-' + val);
+    if (cf) cf.classList.add('visible');
+  }
+  // Update fee
+  const fee = FEES[val] || 20;
+  document.getElementById('summaryFee').textContent = '$' + fee + '.00';
+  document.getElementById('summaryTotal').textContent = '$' + fee + '.00';
+}
+
+function changeStep(dir) {
+  if (currentStep + dir < 0 || currentStep + dir >= totalSteps) {
+    if (currentStep === totalSteps - 1 && dir === 1) {
+      submitApplication(); return;
+    }
+    return;
+  }
+  document.getElementById('step' + currentStep).style.display = 'none';
+  document.getElementById('sdot' + currentStep).className = 'step-dot done';
+  currentStep += dir;
+  document.getElementById('step' + currentStep).style.display = 'block';
+  document.getElementById('sdot' + currentStep).className = 'step-dot active';
+
+  const pct = ((currentStep + 1) / totalSteps * 100) + '%';
+  document.getElementById('progressFill').style.width = pct;
+  document.getElementById('progressLabel').textContent = 'Step ' + (currentStep + 1) + ' of ' + totalSteps;
+  document.getElementById('btnBack').style.visibility = currentStep === 0 ? 'hidden' : 'visible';
+  document.getElementById('btnNext').textContent = currentStep === totalSteps - 1 ? 'Submit & Pay →' : 'Continue →';
+}
+
+function handleFile(input, listId) {
+  const list = document.getElementById(listId);
+  Array.from(input.files).forEach(f => {
+    const item = document.createElement('div');
+    item.className = 'file-item';
+    item.innerHTML = `📄 ${f.name} <span onclick="this.parentElement.remove()">×</span>`;
+    list.appendChild(item);
+  });
+}
+
+function submitApplication() {
+  const id = 'VV-' + Math.floor(100000 + Math.random() * 900000);
+  document.getElementById('generatedId').textContent = id;
+  document.getElementById('step' + currentStep).style.display = 'none';
+  document.getElementById('successScreen').style.display = 'block';
+  document.getElementById('formNav').style.display = 'none';
+
+  // Add to local store for demo
+  applications.unshift({
+    id, name:'New Applicant', email:'applicant@email.com', phone:'',
+    country: {turkey:'Turkey',india:'India',kenya:'Kenya',us:'United States'}[document.getElementById('destCountry').value] || 'Turkey',
+    purpose: document.getElementById('travelPurpose').value || 'Tourism',
+    arrival: document.getElementById('arrivalDate').value,
+    submitted: new Date().toISOString().split('T')[0],
+    status:'Submitted', nationality:'', passport:'', passportExp:'', docs:[], notes:''
+  });
+}
+
+// ─────────────────────────────────────
+// TRACKING
+// ─────────────────────────────────────
+function trackApplication() {
+  const input = document.getElementById('trackInput').value.trim().toUpperCase();
+  const app = applications.find(a => a.id === input);
+  const result = document.getElementById('trackResult');
+  const error  = document.getElementById('trackError');
+
+  if (!app) {
+    result.classList.remove('visible');
+    error.classList.add('visible');
+    return;
+  }
+
+  error.classList.remove('visible');
+  result.classList.add('visible');
+
+  // Summary
+  document.getElementById('trackSummary').innerHTML = `
+    <div class="app-summary-row"><span class="key">Application ID</span><span class="val">${app.id}</span></div>
+    <div class="app-summary-row"><span class="key">Applicant</span><span class="val">${app.name}</span></div>
+    <div class="app-summary-row"><span class="key">Destination</span><span class="val">${FLAG[app.country] || ''} ${app.country}</span></div>
+    <div class="app-summary-row"><span class="key">Purpose</span><span class="val">${app.purpose}</span></div>
+    <div class="app-summary-row"><span class="key">Submitted</span><span class="val">${app.submitted}</span></div>
+  `;
+
+  // Timeline
+  const currentIdx = STATUSES.indexOf(app.status);
+  let tlHTML = '';
+  STATUSES.forEach((s, i) => {
+    const done    = i < currentIdx;
+    const current = i === currentIdx;
+    const dotClass = done ? 'done' : current ? 'current' : '';
+    const labelClass = (done || current) ? '' : 'faded';
+    let note = '';
+    if (current && s === 'Additional Info Requested') {
+      note = `<div class="tl-note">⚠️ We need additional or replacement documents. Please check your email or contact us on WhatsApp.</div>`;
+    }
+    if (current && s === 'Delivered') {
+      note = `<div class="tl-note">✅ Your e-visa has been delivered to your email address. Check your inbox (and spam folder).</div>`;
+    }
+    tlHTML += `
+      <div class="tl-item">
+        <div class="tl-dot ${dotClass}"></div>
+        <div class="tl-label ${labelClass}">${s}</div>
+        ${done || current ? `<div class="tl-date">${done ? 'Completed' : '● In progress'}</div>` : ''}
+        ${note}
+      </div>`;
+  });
+  document.getElementById('trackTimeline').innerHTML = tlHTML;
+}
+
+// Allow Enter key on track input
+document.getElementById('trackInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') trackApplication();
+});
+
+// ─────────────────────────────────────
+// ADMIN
+// ─────────────────────────────────────
+function renderAdmin() {
+  renderStats();
+  renderTable(filteredApps);
+}
+
+function renderStats() {
+  const counts = {};
+  STATUSES.forEach(s => counts[s] = 0);
+  applications.forEach(a => counts[a.status] = (counts[a.status] || 0) + 1);
+
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Total Applications</div>
+      <div class="stat-num">${applications.length}</div>
+      <div class="stat-sub">All time</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Needs Attention</div>
+      <div class="stat-num">${(counts['Submitted']||0) + (counts['Additional Info Requested']||0)}</div>
+      <div class="stat-sub">Submitted + info requests</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">In Progress</div>
+      <div class="stat-num">${(counts['Under Review']||0) + (counts['Processing']||0)}</div>
+      <div class="stat-sub">Review + processing</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Delivered</div>
+      <div class="stat-num">${counts['Delivered']||0}</div>
+      <div class="stat-sub">Completed</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Approved</div>
+      <div class="stat-num">${counts['Approved']||0}</div>
+      <div class="stat-sub">Awaiting delivery</div>
+    </div>
+  `;
+}
+
+function renderTable(apps) {
+  const tbody = document.getElementById('appsTableBody');
+  if (!apps.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-light);padding:2rem;">No applications found.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = apps.map(a => `
+    <tr onclick="openModal('${a.id}')">
+      <td><span class="td-id">${a.id}</span></td>
+      <td class="td-name">${a.name}</td>
+      <td><span class="td-flag">${FLAG[a.country]||''}</span> ${a.country}</td>
+      <td>${a.purpose}</td>
+      <td>${a.submitted}</td>
+      <td><span class="badge ${BADGE_CLASS[a.status]}">${a.status}</span></td>
+    </tr>
+  `).join('');
+}
+
+function applyFilters() {
+  filteredApps = applications.filter(a => {
+    const s = currentFilter.search.toLowerCase();
+    const matchSearch = !s || a.name.toLowerCase().includes(s) || a.id.toLowerCase().includes(s) || a.email.toLowerCase().includes(s);
+    const matchStatus  = !currentFilter.status  || a.status  === currentFilter.status;
+    const matchCountry = !currentFilter.country || a.country === currentFilter.country;
+    return matchSearch && matchStatus && matchCountry;
+  });
+  renderTable(filteredApps);
+}
+
+function filterApps(v)      { currentFilter.search  = v; applyFilters(); }
+function filterByStatus(v)  { currentFilter.status  = v; applyFilters(); }
+function filterByCountry(v) { currentFilter.country = v; applyFilters(); }
+
+function openModal(id) {
+  const a = applications.find(x => x.id === id);
+  if (!a) return;
+
+  document.getElementById('modalTitle').textContent = a.id + ' — ' + a.name;
+
+  const docsHTML = a.docs.length
+    ? a.docs.map(d => `<div class="doc-chip">📄 ${d}</div>`).join('')
+    : '<span style="font-size:0.85rem;color:var(--text-light)">No documents uploaded yet.</span>';
+
+  const statusOptions = STATUSES.map(s =>
+    `<option value="${s}" ${s === a.status ? 'selected' : ''}>${s}</option>`
+  ).join('');
+
+  document.getElementById('modalBody').innerHTML = `
+    <div class="modal-section-title">Applicant Details</div>
+    <div class="detail-grid">
+      <div class="detail-item"><div class="key">Full Name</div><div class="val">${a.name}</div></div>
+      <div class="detail-item"><div class="key">Email</div><div class="val">${a.email}</div></div>
+      <div class="detail-item"><div class="key">Phone / WhatsApp</div><div class="val">${a.phone || '—'}</div></div>
+      <div class="detail-item"><div class="key">Nationality</div><div class="val">${a.nationality || '—'}</div></div>
+      <div class="detail-item"><div class="key">Passport No.</div><div class="val">${a.passport || '—'}</div></div>
+      <div class="detail-item"><div class="key">Passport Expiry</div><div class="val">${a.passportExp || '—'}</div></div>
+    </div>
+
+    <div class="modal-section-title">Trip Details</div>
+    <div class="detail-grid">
+      <div class="detail-item"><div class="key">Destination</div><div class="val">${FLAG[a.country]||''} ${a.country}</div></div>
+      <div class="detail-item"><div class="key">Purpose</div><div class="val">${a.purpose}</div></div>
+      <div class="detail-item"><div class="key">Arrival</div><div class="val">${a.arrival || '—'}</div></div>
+      <div class="detail-item"><div class="key">Date Submitted</div><div class="val">${a.submitted}</div></div>
+    </div>
+
+    ${a.notes ? `<div class="modal-section-title">Notes</div><p style="font-size:0.88rem;color:var(--text-mid);line-height:1.6;">${a.notes}</p>` : ''}
+
+    <div class="modal-section-title">Documents Uploaded</div>
+    <div class="docs-list">${docsHTML}</div>
+
+    <div class="modal-section-title">Update Status</div>
+    <div class="status-update-row">
+      <select id="modalStatusSelect">${statusOptions}</select>
+    </div>
+    <textarea class="note-area" id="modalNote" placeholder="Add an internal note or message to the customer (optional)…"></textarea>
+    <button class="btn-update" onclick="updateStatus('${a.id}')">Update Status & Notify Customer</button>
+  `;
+
+  document.getElementById('appModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('appModal').classList.remove('open');
+}
+
+function updateStatus(id) {
+  const app = applications.find(a => a.id === id);
+  if (!app) return;
+  app.status = document.getElementById('modalStatusSelect').value;
+  closeModal();
+  renderAdmin();
+
+  // Simulated email notification
+  const note = document.getElementById('modalNote')?.value;
+  console.log(`[EMAIL SENT] To: ${app.email} | Status: ${app.status}${note ? ' | Note: ' + note : ''}`);
+  alert(`✅ Status updated to "${app.status}"\nSimulated email notification sent to ${app.email}`);
+}
+
+function selectPayment(el) {
+  document.querySelectorAll('.pay-method').forEach(m => m.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ─────────────────────────────────────
+// CSV EXPORT
+// ─────────────────────────────────────
+function exportCSV() {
+  const headers = ['App ID','Name','Email','Phone','Country','Purpose','Arrival Date','Submitted','Status','Nationality','Passport No','Passport Expiry','Notes'];
+  const rows = applications.map(a => [
+    a.id, a.name, a.email, a.phone, a.country, a.purpose,
+    a.arrival, a.submitted, a.status, a.nationality, a.passport, a.passportExp, a.notes
+  ].map(v => `"${(v||'').replace(/"/g,'""')}"`).join(','));
+
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'visaverde-applications.csv';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+// Close modal on overlay click
+document.getElementById('appModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+</script>
+</body>
+</html>
